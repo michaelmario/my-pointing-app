@@ -1,0 +1,157 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Fonctions de validation communes
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        ('role' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'user-admin']);
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isActiveUser() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isActive == true;
+    }
+
+    // Règles pour la collection users
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin();
+      allow update: if isAdmin() || isOwner(userId);
+      allow delete: if isAdmin();
+
+      // Sous-collection de préférences utilisateur
+      match /preferences/{prefId} {
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId);
+      }
+    }
+
+    // Règles pour la collection timeSheets
+    match /timeSheets/{timeSheetId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() || 
+        resource.data.userId == request.auth.uid
+      );
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        isAdmin() || 
+        (resource.data.userId == request.auth.uid && 
+         resource.data.status != 'approved')
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Règles pour la collection messages
+    match /messages/{messageId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() || 
+        resource.data.recipientId == request.auth.uid ||
+        resource.data.senderId == request.auth.uid
+      );
+      allow create: if isAuthenticated() && 
+        request.resource.data.senderId == request.auth.uid;
+      allow update: if false; // Messages are immutable
+      allow delete: if isAdmin();
+    }
+
+    // Règles pour la collection locations
+    match /locations/{locationId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() || 
+        resource.data.userId == request.auth.uid
+      );
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
+    // Règles pour la collection settings
+    match /settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Règles pour la collection departments
+    match /departments/{departmentId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Règles pour la collection absences
+    match /absences/{absenceId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() || 
+        resource.data.userId == request.auth.uid
+      );
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        isAdmin() || 
+        (resource.data.userId == request.auth.uid && 
+         resource.data.status == 'pending')
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Règles pour la collection notifications
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow create: if isAdmin();
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+
+    // Règles pour la collection logs
+    match /logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update: if false; // Logs are immutable
+      allow delete: if false; // Logs cannot be deleted
+    }
+
+    // Règles pour la collection reports
+    match /reports/{reportId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Validation des données
+    function isValidTimeSheet(data) {
+      return data.hours >= 0 && data.hours <= 24
+        && data.date is timestamp
+        && data.userId is string;
+    }
+
+    function isValidAbsence(data) {
+      return data.startDate is timestamp
+        && data.endDate is timestamp
+        && data.type in ['vacation', 'sick', 'other']
+        && data.userId is string;
+    }
+
+    function isValidLocation(data) {
+      return data.latitude is number
+        && data.longitude is number
+        && data.timestamp is timestamp
+        && data.userId is string;
+    }
+  }
+}

@@ -1,0 +1,83 @@
+/* Styles globaux responsifs */
+@media screen and (max-width: 768px) {
+  /* Conversion des tableaux en cards */
+  table, thead, tbody, th, td, tr {
+    display: block;
+  }
+
+  thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+
+  tr {
+    margin-bottom: 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  td {
+    position: relative;
+    padding: 10px 10px 10px 50% !important;
+    border: none !important;
+    border-bottom: 1px solid #eee !important;
+  }
+
+  td:last-child {
+    border-bottom: none !important;
+  }
+
+  td:before {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    width: 45%;
+    transform: translateY(-50%);
+    font-weight: bold;
+  }
+
+  /* Grilles responsives */
+  .grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Espacement responsive */
+  .container {
+    padding: 10px !important;
+  }
+
+  /* Boutons et actions */
+  .actions-bar {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .action-buttons {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+
+  button {
+    width: 100% !important;
+  }
+
+  /* Formulaires */
+  .form-row {
+    flex-direction: column !important;
+  }
+
+  .form-group {
+    width: 100% !important;
+  }
+
+  /* Modals */
+  .modal-content {
+    width: 95% !important;
+    margin: 10px !important;
+    max-height: 90vh !important;
+  }
+} 
