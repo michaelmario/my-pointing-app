@@ -68,7 +68,7 @@ Les contributions sont les bienvenues ! Voir `CONTRIBUTING.md` pour les détails
 
 ---
 
-Développé avec ❤️ par [Votre Équipe]
+Développé avec ❤️ par Achille Michael Mario
 
 # Application de Gestion des Présences - Nouvelles Fonctionnalités
 
